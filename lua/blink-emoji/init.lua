@@ -1,4 +1,11 @@
-local async = require "blink.cmp.lib.async"
+-- TODO: Remove "blink.cmp.lib.async" module when blink.cmp v2 is stable.
+local task_ok, task = pcall(function()
+  return require("blink.cmp.lib.async").task
+end)
+
+if not task_ok then
+  task = require "blink.lib.task"
+end
 
 local emojis
 local config
@@ -83,7 +90,7 @@ end
 
 ---@param context blink.cmp.Context
 function M:get_completions(context, callback)
-  local task = async.task.empty():map(function()
+  local async_task = task.new(function()
     local cursor_before_line = context.line:sub(1, context.cursor[2])
     if
       not keyword_pattern(cursor_before_line, self:get_trigger_characters())
@@ -99,7 +106,7 @@ function M:get_completions(context, callback)
     end
   end)
   return function()
-    task:cancel()
+    async_task:cancel()
   end
 end
 
